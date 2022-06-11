@@ -4,12 +4,13 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/drawable/ic_baseline_home_24.xml" value="0.1" />
+        <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/drawable/ic_baseline_photo_camera_24.xml" value="0.151" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/drawable/ic_capture.xml" value="0.1" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_about.xml" value="0.14114583333333333" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_camera.xml" value="0.6200657894736842" />
-        <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_history.xml" value="0.1" />
+        <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_history.xml" value="0.22" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_login.xml" value="0.22" />
-        <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_main.xml" value="0.5" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_profile.xml" value="0.22" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_signup.xml" value="0.25" />
         <entry key="..\:/Users/hp/AndroidStudioProjects/RipeAi/app/src/main/res/layout/activity_upload.xml" value="0.14114583333333333" />

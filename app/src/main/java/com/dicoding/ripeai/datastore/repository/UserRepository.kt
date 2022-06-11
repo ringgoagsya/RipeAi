@@ -9,27 +9,35 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
 import com.dicoding.ripeai.datastore.api.ApiService
-import com.dicoding.ripeai.datastore.response.LoginResponse
-import com.dicoding.ripeai.datastore.response.RegisterResponse
-import com.dicoding.ripeai.datastore.response.UploadResponse
+import com.dicoding.ripeai.datastore.response.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.dicoding.ripeai.ui.Result
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.Call
 
 class UserRepository private constructor(
     private val dataStore: DataStore<Preferences>,
     private val apiService: ApiService
 ) {
+    fun getHistory(email: String): LiveData<Result<Call<HistoryResponse>>> = liveData{
+        emit(Result.Loading)
+        try {
+            val client = apiService.getHistory(email)
+            emit(Result.Success(client))
+        }catch (e : java.lang.Exception){
+            Log.d("UserRepository", "getHistory: ${e.message.toString()} ")
+            emit(Result.Error(e.message.toString()))
+        }
+    }
     fun uploadStory(
         token: String,
-        imageMultipart: MultipartBody.Part,
-        desc: RequestBody,
+        imageMultipart: MultipartBody.Part
     ): LiveData<Result<UploadResponse>> = liveData {
         emit(Result.Loading)
         try {
-            val client = apiService.uploadStory("Bearer $token", imageMultipart, desc)
+            val client = apiService.uploadStory("Bearer $token", imageMultipart)
             emit(Result.Success(client))
         } catch (e: Exception) {
             e.printStackTrace()
@@ -91,6 +99,7 @@ class UserRepository private constructor(
             preferences[STATE_KEY] = false
         }
     }
+
 
 
     companion object {

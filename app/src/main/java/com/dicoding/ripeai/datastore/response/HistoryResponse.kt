@@ -5,9 +5,10 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-class HistoryResponse (
+data class HistoryResponse(
+
     @field:SerializedName("data")
-    val data: List<DataItem>,
+    val data: ArrayList<DataItem>,
 
     @field:SerializedName("success")
     val success: Boolean
@@ -16,15 +17,12 @@ class HistoryResponse (
 @Parcelize
 data class DataItem(
 
-    @field:SerializedName("email_user")
-    val emailUser: String? = null,
+    @field:SerializedName("img_url")
+    val imgUrl: String,
 
     @field:SerializedName("fruit")
-    val fruit: String? = null,
+    val fruit: String,
 
     @field:SerializedName("ripeness")
-    val ripeness: String? = null,
-
-    @field:SerializedName("id")
-    val id: Int? = null
+    val ripeness: String
 ) : Parcelable

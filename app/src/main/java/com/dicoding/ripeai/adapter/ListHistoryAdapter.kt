@@ -1,23 +1,45 @@
 package com.dicoding.ripeai.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import androidx.core.util.*
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.dicoding.ripeai.R
+import com.dicoding.ripeai.databinding.RowItemHistoryBinding
+import com.dicoding.ripeai.datastore.response.DataItem
+import com.dicoding.ripeai.datastore.response.HistoryResponse
+import retrofit2.Call
 
-class ListHistoryAdapter(private val listHistory: List<String>) : RecyclerView.Adapter<ListHistoryAdapter.ViewHolder>() {
-    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int) =
-        ViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.row_item_history, viewGroup, false))
-    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        viewHolder.tvItem.text = listHistory[position]
-        viewHolder.tvDescription.text = listHistory[position]
+class ListHistoryAdapter(private val listHistory: ArrayList<DataItem>) : RecyclerView.Adapter<ListHistoryAdapter.ListViewHolder>() {
+    inner class ListViewHolder(var binding: RowItemHistoryBinding) : RecyclerView.ViewHolder(binding.root)
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun addDataToList(items: ArrayList<DataItem>) {
+        listHistory.clear()
+        listHistory.addAll(items)
+        notifyDataSetChanged()
     }
-    override fun getItemCount() = listHistory.size
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvItem: TextView = view.findViewById(R.id.fruit_name)
-        val tvDescription: TextView = view.findViewById(R.id.description)
+    override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ListViewHolder {
+        val binding = RowItemHistoryBinding.inflate(LayoutInflater.from(viewGroup.context), viewGroup, false)
+        return ListViewHolder(binding)
     }
+    override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
+        val history = listHistory[position]
+
+        holder.binding.apply {
+            fruitName.text = history.fruit
+            description.text = history.ripeness
+            Glide.with(holder.binding.root)
+                .load(history.imgUrl)
+                .circleCrop()
+                .into(imgFruit)
+        }
+    }
+    override fun getItemCount(): Int = listHistory.size
+
 
 }

@@ -1,12 +1,17 @@
 package com.dicoding.ripeai.ui.history
 
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
+import android.view.View
 import android.widget.TextView
+import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dicoding.ripeai.R
 import com.dicoding.ripeai.adapter.ListHistoryAdapter
@@ -14,19 +19,31 @@ import com.dicoding.ripeai.databinding.ActivityHistoryBinding
 import com.dicoding.ripeai.datastore.api.ApiConfig
 import com.dicoding.ripeai.datastore.response.DataItem
 import com.dicoding.ripeai.datastore.response.HistoryResponse
+import com.dicoding.ripeai.ui.UserViewModelFactory
 import com.dicoding.ripeai.ui.about.AboutActivity
 import com.dicoding.ripeai.ui.main.MainActivity
+import com.dicoding.ripeai.ui.Result
 import com.dicoding.ripeai.ui.profile.ProfileActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.collections.ArrayList
 
 
+@Suppress("UNCHECKED_CAST")
 class HistoryActivity : AppCompatActivity() {
     private lateinit var binding : ActivityHistoryBinding
     private lateinit var tvText: TextView
     private lateinit var navigation: BottomNavigationView
+    private lateinit var historyViewModel: HistoryViewModel
+
+    private var list = ArrayList<DataItem>()
+
+    private val adapter: ListHistoryAdapter by lazy {
+        ListHistoryAdapter(list)
+    }
+
     companion object {
         private const val TAG = "HistoryActivity"
         private const val EMAIL = "john@email.com"
@@ -36,62 +53,52 @@ class HistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val layoutManager = LinearLayoutManager(this)
+        findHistory()
 
-        binding.rvHistory.layoutManager = layoutManager
-        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
-        binding.rvHistory.addItemDecoration(itemDecoration)
         init()
         navigationListener()
 
-        findHistory()
+
     }
 
     private fun findHistory() {
-        val client = ApiConfig.getApiService().getHistory(EMAIL)
-        client.enqueue(object : Callback<HistoryResponse> {
-            override fun onResponse(
-                call: Call<HistoryResponse>,
-                response: Response<HistoryResponse>
-            ) {
-//                showLoading(false)
-                if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    if (responseBody != null) {
-                        setRestaurantData(responseBody.data)
-                        setReviewData(responseBody.data)
+        binding.rvHistory.setHasFixedSize(true)
+        if (applicationContext.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            binding.rvHistory.layoutManager = GridLayoutManager(this, 2)
+        } else {
+            binding.rvHistory.layoutManager = LinearLayoutManager(this)
+        }
+        val factory: UserViewModelFactory = UserViewModelFactory.getInstance(this)
+        historyViewModel = ViewModelProvider(
+            this,
+            factory
+        )[HistoryViewModel::class.java]
+
+        historyViewModel.getToken().observe(this){ token ->
+            historyViewModel.getHistory(token).observe(this){
+                if(it != null){
+                    when(it){
+                        is Result.Success->{
+                            val history = it.data
+                            adapter.addDataToList(history as ArrayList<DataItem>)
+//                            list.addAll(history)
+                            binding.rvHistory.adapter = adapter
+                            Log.i(this@HistoryActivity.toString(), "Success  $Result")
+                        }
+                        is Result.Error -> {
+                            Log.e(this@HistoryActivity.toString(), "onFailure dimana:  $Result")
+                        }
                     }
-                } else {
-                    Log.e(TAG, "onFailure: ${response.message()}")
                 }
             }
-            override fun onFailure(call: Call<HistoryResponse>, t: Throwable) {
-//                showLoading(false)
-                Log.e(TAG, "onFailure: ${t.message}")
-            }
-        })
-    }
-    private fun setRestaurantData(data: List<DataItem>) {
-//        binding.textView.text = data.
-//        binding.des.text = data.ripeness
-//        Glide.with(this@MainActivity)
-//            .load("https://restaurant-api.dicoding.dev/images/large/${restaurant.pictureId}")
-//            .into(binding.ivPicture)
-    }
-    private fun setReviewData(data: List<DataItem>) {
-        val listHistory = ArrayList<String>()
-        for (data in data) {
-            listHistory.add(
-                """
-                ${data.fruit}
-                - ${data.ripeness}
-                """.trimIndent()
-            )
         }
-        val adapter = ListHistoryAdapter(listHistory)
-        binding.rvHistory.adapter = adapter
 
     }
+
+    private fun setHistoryData(data: List<DataItem>) {
+
+    }
+
 
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

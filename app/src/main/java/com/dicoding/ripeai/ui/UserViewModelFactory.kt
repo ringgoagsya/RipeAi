@@ -4,9 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.ripeai.datastore.repository.UserRepository
+import com.dicoding.ripeai.ui.history.HistoryViewModel
 import com.dicoding.ripeai.ui.login.LoginViewModel
 import com.dicoding.ripeai.ui.main.MainViewModel
+import com.dicoding.ripeai.ui.profile.ProfileViewModel
 import com.dicoding.ripeai.ui.signup.SignupViewModel
+import com.dicoding.ripeai.ui.upload.UploadViewModel
 
 class UserViewModelFactory(private val userRepo: UserRepository) : ViewModelProvider.NewInstanceFactory() {
 
@@ -21,6 +24,15 @@ class UserViewModelFactory(private val userRepo: UserRepository) : ViewModelProv
             }
             modelClass.isAssignableFrom(MainViewModel::class.java) -> {
                 MainViewModel(userRepo) as T
+            }
+            modelClass.isAssignableFrom(HistoryViewModel::class.java) -> {
+                HistoryViewModel(userRepo) as T
+            }
+            modelClass.isAssignableFrom(UploadViewModel::class.java) -> {
+                UploadViewModel(userRepo) as T
+            }
+            modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
+                ProfileViewModel(userRepo) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: " + modelClass.name)
         }

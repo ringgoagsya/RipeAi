@@ -42,17 +42,28 @@
         app:layout_constraintEnd_toEndOf="@+id/image_view"
         app:layout_constraintTop_toBottomOf="@+id/image_view" />
 
-    <EditText
-        android:id="@+id/edt_desc"
+    <TextView
+        android:id="@+id/tv_fruitName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/hint_desc"
         android:importantForAutofill="no"
-        android:inputType="textMultiLine"
         android:minHeight="48dp"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="@+id/image_view"
         app:layout_constraintStart_toStartOf="@+id/image_view"
         app:layout_constraintTop_toBottomOf="@id/button_gallery" />
+    <TextView
+        android:id="@+id/tv_prediction"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_desc"
+        android:importantForAutofill="no"
+        android:minHeight="48dp"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/image_view"
+        app:layout_constraintStart_toStartOf="@+id/image_view"
+        app:layout_constraintTop_toBottomOf="@id/tv_fruitName" />
 
 
     <Button

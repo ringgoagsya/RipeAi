@@ -18,7 +18,6 @@ class UploadViewModel(
 
     fun uploadStory(
         token: String,
-        imageMultipart: MultipartBody.Part,
-        desc: RequestBody,
-    ) = userRepo.uploadStory(token, imageMultipart, desc)
+        imageMultipart: MultipartBody.Part
+    ) = userRepo.uploadStory(token, imageMultipart)
 }

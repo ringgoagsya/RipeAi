@@ -40,4 +40,6 @@
     <string name="img_fruit">image for fruit</string>
     <string name="fruit_name">Name of Fruit</string>
     <string name="description">description</string>
+    <string name="banana">Banana</string>
+    <string name="banana_description">A banana is an elongated, edible fruit</string>
 </resources>

@@ -23,4 +23,6 @@ class MainViewModel (private val userRepo: UserRepository) :
             userRepo.logout()
         }
     }
+
+//    fun getHistory(email: String) = userRepo.getHistory(email)
 }

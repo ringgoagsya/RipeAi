@@ -8,39 +8,25 @@ import kotlinx.android.parcel.Parcelize
 data class UserResponse(
 
 	@field:SerializedName("data")
-	val data: List<DataUser>,
+	val data: ArrayList<DataUser>,
 
 	@field:SerializedName("success")
-	val success: Boolean? = null
+	val success: Boolean
 ) : Parcelable
 
 @Parcelize
 data class DataUser(
 
 	@field:SerializedName("firstname")
-	val firstname: String? = null,
-
-	@field:SerializedName("password")
-	val password: String? = null,
-
-	@field:SerializedName("updated_at")
-	val updatedAt: String? = null,
-
-	@field:SerializedName("phone")
-	val phone: String? = null,
-
-	@field:SerializedName("created_at")
-	val createdAt: String? = null,
-
-	@field:SerializedName("id")
-	val id: Int? = null,
-
-	@field:SerializedName("email")
-	val email: String? = null,
+	val firstname: String,
 
 	@field:SerializedName("lastname")
-	val lastname: String? = null,
+	val lastname: String,
 
-	@field:SerializedName("status")
-	val status: String? = null
+	@field:SerializedName("phone")
+	val phone: String,
+
+	@field:SerializedName("email")
+	val email: String,
+
 ) : Parcelable

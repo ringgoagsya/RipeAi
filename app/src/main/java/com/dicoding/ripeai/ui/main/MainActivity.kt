@@ -7,13 +7,17 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.ripeai.R
+import com.dicoding.ripeai.databinding.ActivityHistoryBinding
+import com.dicoding.ripeai.databinding.ActivityMainBinding
 import com.dicoding.ripeai.datastore.response.Data
 import com.dicoding.ripeai.ui.UserViewModelFactory
 import com.dicoding.ripeai.ui.about.AboutActivity
 import com.dicoding.ripeai.ui.history.HistoryActivity
 import com.dicoding.ripeai.ui.profile.ProfileActivity
+import com.dicoding.ripeai.ui.upload.UploadActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 
@@ -22,14 +26,21 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvText: TextView
     private lateinit var navigation: BottomNavigationView
     private lateinit var mainViewModel: MainViewModel
+    private lateinit var binding : ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         val data = intent.getParcelableExtra<Data>(EXTRA_DATA)
         init()
         navigationListener()
         runViewModel()
         tvText.text = data?.email ?: ""
+        binding.cardView.setOnClickListener {
+            val intent = Intent(this, UploadActivity::class.java)
+            intent.putExtra(UploadActivity.EXTRA_FRUIT, "banana")
+            startActivity(intent)
+        }
 
 
     }
@@ -114,6 +125,7 @@ class MainActivity : AppCompatActivity() {
 
     }
     companion object{
+        const val EXTRA_FRUIT = "extra_fruit"
         const val EXTRA_TITLE = "extra_title"
         const val EXTRA_DATA = "extra_data"
     }

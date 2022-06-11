@@ -15,10 +15,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import com.dicoding.ripeai.R
 import com.dicoding.ripeai.databinding.ActivityUploadBinding
+import com.dicoding.ripeai.datastore.response.Data
 import com.dicoding.ripeai.ui.UtilsCamera
 import com.dicoding.ripeai.ui.Result
+import com.dicoding.ripeai.ui.UserViewModelFactory
+import com.dicoding.ripeai.ui.main.MainActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -40,7 +44,14 @@ class UploadActivity : AppCompatActivity() {
         setContentView(binding.root)
         setuppermission()
 
+        val factory: UserViewModelFactory = UserViewModelFactory.getInstance(this)
+        uploadViewModel = ViewModelProvider(this, factory)[UploadViewModel::class.java]
 
+        val data = intent.getStringExtra(EXTRA_FRUIT)
+        val ripe = "Ripe"
+
+        binding.tvFruitName.text = "Fruit : $data"
+        binding.tvPrediction.text = "ripeness : $ripe "
         binding.buttonCam.setOnClickListener { useCamera() }
         binding.buttonGallery.setOnClickListener { useGallery() }
         binding.buttonUpload.setOnClickListener { uploadPhoto() }
@@ -68,21 +79,15 @@ class UploadActivity : AppCompatActivity() {
 
     private fun uploadPhoto() {
         if (getFile != null) {
-            val description = binding.edtDesc.text.toString().trim()
-            if (description.isEmpty()) {
-                binding.edtDesc.error =
-                    resources.getString(R.string.message_validation, "description")
-            } else {
                 binding.progressBar.visibility = View.VISIBLE
                 val file = UtilsCamera.reduceFileImage(getFile as File)
-                val descMedia = description.toRequestBody("text/plain".toMediaType())
                 val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
                 val imageMultipart: MultipartBody.Part = MultipartBody.Part.createFormData(
                     "photo",
                     file.name,
                     requestImageFile
                 )
-                uploadViewModel.uploadStory(token, imageMultipart, descMedia)
+                uploadViewModel.uploadStory(token, imageMultipart)
                     .observe(this) { result ->
                         if (result != null) {
                             when (result) {
@@ -106,7 +111,6 @@ class UploadActivity : AppCompatActivity() {
                             }
                         }
                     }
-            }
         } else {
             Toast.makeText(this, resources.getString(R.string.input_image), Toast.LENGTH_SHORT)
                 .show()
@@ -199,6 +203,7 @@ class UploadActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val EXTRA_FRUIT ="banana"
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         private const val REQUEST_CODE_PERMISSIONS = 10
         const val CAMERA_X_RESULT = 200

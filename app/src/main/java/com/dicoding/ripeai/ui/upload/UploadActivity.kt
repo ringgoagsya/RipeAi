@@ -36,16 +36,11 @@ import java.util.concurrent.TimeUnit
 class UploadActivity : AppCompatActivity() {
 
     val TAG = "TFServingDemo"
-    val INPUT_IMG_HEIGHT = 360
-    val INPUT_IMG_WIDTH = 249
+    val INPUT_IMG_HEIGHT = 150
+    val INPUT_IMG_WIDTH = 150
     val TEST_IMG_NAME = "user.png"
 
     // This is for Android Emulator
-    val SERVER = "10.0.2.2"
-    val GRPC_PORT = 8500
-    val REST_PORT = 8501
-    val MODEL_NAME = "ssd_mobilenet_v2_2"
-    val MODEL_VERSION: Long = 123
     val SIGNATURE_NAME = "serving_default"
 
     private val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
@@ -91,8 +86,8 @@ class UploadActivity : AppCompatActivity() {
     private fun createRESTRequest(): Request? {
         //Create the REST request.
         //Create the REST request.
-        val INPUT_IMG_WIDTH = 128
-        val INPUT_IMG_HEIGHT = 128
+        val INPUT_IMG_WIDTH = 150
+        val INPUT_IMG_HEIGHT = 150
         val inputImg = IntArray(INPUT_IMG_HEIGHT * INPUT_IMG_WIDTH)
         val inputImgRGB =
             Array(1) {
@@ -115,10 +110,10 @@ class UploadActivity : AppCompatActivity() {
         for (i in 0 until INPUT_IMG_HEIGHT) {
             for (j in 0 until INPUT_IMG_WIDTH) {
                 // Extract RBG values from each pixel; alpha is ignored
-                pixel = inputImg[i * INPUT_IMG_WIDTH + j]
-                inputImgRGB[0][i][j][0] = pixel shr 16 and 0xff
-                inputImgRGB[0][i][j][1] = pixel shr 8 and 0xff
-                inputImgRGB[0][i][j][2] = pixel and 0xff
+                pixel = inputImg[i * INPUT_IMG_WIDTH + j]/255
+                inputImgRGB[0][i][j][0] = pixel
+                inputImgRGB[0][i][j][1] = pixel
+                inputImgRGB[0][i][j][2] = pixel
             }
         }
 
@@ -180,6 +175,7 @@ class UploadActivity : AppCompatActivity() {
         // Process the REST response.
         // Process the REST response.
         val predictionsArray = responseObject.getJSONArray("predictions")
+        binding.tvPrediction.text = predictionsArray.toString()
         //You only send one image, so you directly extract the first element.
         //You only send one image, so you directly extract the first element.
         val predictions = predictionsArray.getJSONObject(0)

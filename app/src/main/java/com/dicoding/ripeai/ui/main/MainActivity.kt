@@ -38,7 +38,12 @@ class MainActivity : AppCompatActivity() {
         tvText.text = data?.email ?: ""
         binding.cardView.setOnClickListener {
             val intent = Intent(this, UploadActivity::class.java)
-            intent.putExtra(UploadActivity.EXTRA_FRUIT, "banana")
+            intent.putExtra(UploadActivity.EXTRA_FRUIT, "Banana")
+            startActivity(intent)
+        }
+        binding.cardViewApple.setOnClickListener {
+            val intent = Intent(this, UploadActivity::class.java)
+            intent.putExtra(UploadActivity.EXTRA_FRUIT, "Apple")
             startActivity(intent)
         }
 

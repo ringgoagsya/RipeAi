@@ -25,6 +25,7 @@ import com.dicoding.ripeai.ui.UtilsCamera
 import io.grpc.ManagedChannel
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
@@ -35,6 +36,7 @@ import java.util.concurrent.TimeUnit
 
 class UploadActivity : AppCompatActivity() {
 
+    val url =""
     val TAG = "TFServingDemo"
     val INPUT_IMG_HEIGHT = 150
     val INPUT_IMG_WIDTH = 150
@@ -71,12 +73,12 @@ class UploadActivity : AppCompatActivity() {
         uploadViewModel = ViewModelProvider(this, factory)[UploadViewModel::class.java]
 
         val data = intent.getStringExtra(EXTRA_FRUIT)
-        val ripe = "Ripe"
+        val ripe = "Percentage Ripeness"
 
         createRESTRequest()
 
         binding.tvFruitName.text = "Fruit : $data"
-        binding.tvPrediction.text = "ripeness : $ripe "
+        binding.tvPrediction.text = "Ripeness : $ripe "
         binding.buttonCam.setOnClickListener { useCamera() }
         binding.buttonGallery.setOnClickListener { useGallery() }
         binding.buttonUpload.setOnClickListener { uploadPhoto() }
@@ -84,7 +86,6 @@ class UploadActivity : AppCompatActivity() {
 
     }
     private fun createRESTRequest(): Request? {
-        //Create the REST request.
         //Create the REST request.
         val INPUT_IMG_WIDTH = 150
         val INPUT_IMG_HEIGHT = 150
@@ -120,9 +121,20 @@ class UploadActivity : AppCompatActivity() {
         val requestBody: RequestBody = RequestBody.Companion.create(
             "{\"signature_name\": \"serving_default\",\"instances\": " + inputImgRGB.contentDeepToString() + "}", JSON
         )
-
+        var url =""
+        when (intent.getStringExtra(EXTRA_FRUIT)) {
+            "Banana" -> {
+                url ="http://34.128.102.68:8501/v1/Models/Banana:predict"
+            }
+            "Apple" -> {
+                url ="http://34.128.102.68:8501/v1/Models/Apple:predict"
+            }
+            else -> {
+                Log.e(TAG, "Invalid to get data ")
+            }
+        }
         return Request.Builder()
-            .url("http://34.70.38.194:8501/v1/Models/Banana:predict")
+            .url(url)
             .post(requestBody)
             .build()
     }
@@ -173,11 +185,38 @@ class UploadActivity : AppCompatActivity() {
 
     private fun postprocessRESTResponse(responseObject: JSONObject) {
         // Process the REST response.
-        // Process the REST response.
         val predictionsArray = responseObject.getJSONArray("predictions")
+        //You only send one image, so you directly extract the first element.
+
+        Log.d(TAG,"Data : $predictionsArray")
         binding.tvPrediction.text = predictionsArray.toString()
-        //You only send one image, so you directly extract the first element.
-        //You only send one image, so you directly extract the first element.
+
+        val booksJSONArray = JSONArray(predictionsArray)
+        for (i in 0 until booksJSONArray.length()) {
+            val book = booksJSONArray.getJSONObject(i)
+            Log.d(TAG,"Data : $book")
+        }
+        val pred =predictionsArray.getJSONObject(1)
+        Log.d(TAG,"Data : $pred")
+//        var predict_result = mutableMapOf<String, Double>()
+//        predict_result["Overipe"] = predictionsArray[0][0]
+//        predict_result["Ripe"] = predictionsArray[1] as Double
+//        predict_result["Unripe"] = predictionsArray[2] as Double
+//        predict_result = predict_result.toList().sortedBy { (_, value) -> value as Comparable<Any>}.toMap() as MutableMap<String, Double>
+//        Log.d(TAG,"Data : $predictionsArray, $predict_result")
+//        if (predict_result["Overipe"] == 1.0 || predict_result["Ripe"] == 1.0 || predict_result["Unripe"] == 1.0) {
+//            var error = "Is not a Banana"
+//            binding.tvFruitName.text = error
+//            binding.tvPrediction.text = error
+//        }
+//        else {
+//            var overipe_result = (predict_result["Overipe"].toString() + " %") as String.Companion
+//            var ripe_result = (predict_result["Ripe"].toString() + " %") as String.Companion
+//            var unripe_result = (predict_result["Unripe"].toString() + " %") as String.Companion
+//            binding.tvPrediction.text = "$overipe_result/n$ripe_result/n$unripe_result"
+//        }
+
+
         val predictions = predictionsArray.getJSONObject(0)
         // Argmax
         // Argmax

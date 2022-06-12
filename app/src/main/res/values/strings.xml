@@ -45,4 +45,6 @@
     <string name="name_profile">"Name : "</string>
     <string name="phone_profile">"Phone : "</string>
     <string name="email_profile">Email :</string>
+    <string name="apple">Apple</string>
+    <string name="apple_description">An apple is an edible fruit produced by an apple tree (Malus domestica). Apple trees are cultivated worldwide and are the most widely grown species in the genus Malus</string>
 </resources>

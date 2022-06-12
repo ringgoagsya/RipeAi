@@ -4,8 +4,10 @@ import android.content.Intent
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -81,7 +83,7 @@ class HistoryActivity : AppCompatActivity() {
                         is Result.Success->{
                             val history = it.data
                             adapter.addDataToList(history as ArrayList<DataItem>)
-//                            list.addAll(history)
+                            list.addAll(history)
                             binding.rvHistory.adapter = adapter
                             Log.i(this@HistoryActivity.toString(), "Success  $Result")
                         }
@@ -95,18 +97,7 @@ class HistoryActivity : AppCompatActivity() {
 
     }
 
-    private fun setHistoryData(data: List<DataItem>) {
 
-    }
-
-
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.top_menu, menu)
-
-        return true
-    }
     private fun init() {
         tvText = findViewById(R.id.textView)
         navigation = findViewById(R.id.navigation)
@@ -147,6 +138,26 @@ class HistoryActivity : AppCompatActivity() {
                 }
             }
             false
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.top_menu, menu)
+
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.logout -> {
+                historyViewModel.logout()
+                true
+            }
+            R.id.settings -> {
+                startActivity(Intent(Settings.ACTION_LOCALE_SETTINGS))
+                true
+            }
+            else -> true
         }
     }
 }

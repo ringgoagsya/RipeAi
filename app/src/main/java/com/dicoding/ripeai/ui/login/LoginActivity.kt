@@ -84,11 +84,11 @@ class LoginActivity : AppCompatActivity() {
                                 if (!user.success){
                                     Toast.makeText(this@LoginActivity, user.message, Toast.LENGTH_SHORT).show()
                                 }else{
-                                    val token = user.data?.id+"/"+user.data?.email+"/"+user.data?.phone+"/"+user.data?.firstname
+                                    val token = user.data?.email
                                     val intent = Intent(binding.root.context, MainActivity::class.java)
                                     intent.putExtra(MainActivity.EXTRA_DATA, user.data)
                                     startActivity(intent)
-                                    loginViewModel.setToken(token, true)
+                                    token?.let { loginViewModel.setToken(it, true) }
                                 }
                             }
                             is Result.Error -> {

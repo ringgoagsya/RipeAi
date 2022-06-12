@@ -3,13 +3,15 @@ package com.dicoding.ripeai.ui.upload
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import android.location.Location
+import android.graphics.*
+import android.graphics.Color.GREEN
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.view.View
+import android.os.StrictMode
+import android.os.StrictMode.ThreadPolicy
+import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -18,37 +20,65 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.ripeai.R
 import com.dicoding.ripeai.databinding.ActivityUploadBinding
-import com.dicoding.ripeai.datastore.response.Data
-import com.dicoding.ripeai.ui.UtilsCamera
-import com.dicoding.ripeai.ui.Result
 import com.dicoding.ripeai.ui.UserViewModelFactory
-import com.dicoding.ripeai.ui.main.MainActivity
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.dicoding.ripeai.ui.UtilsCamera
+import io.grpc.ManagedChannel
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.TimeUnit
+
 
 class UploadActivity : AppCompatActivity() {
+
+    val TAG = "TFServingDemo"
+    val INPUT_IMG_HEIGHT = 360
+    val INPUT_IMG_WIDTH = 249
+    val TEST_IMG_NAME = "user.png"
+
+    // This is for Android Emulator
+    val SERVER = "10.0.2.2"
+    val GRPC_PORT = 8500
+    val REST_PORT = 8501
+    val MODEL_NAME = "ssd_mobilenet_v2_2"
+    val MODEL_VERSION: Long = 123
+    val SIGNATURE_NAME = "serving_default"
+
+    private val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
+    private lateinit var client: OkHttpClient
+
+    private val channel: ManagedChannel? = null
+
+
     private lateinit var binding: ActivityUploadBinding
     private lateinit var uploadViewModel: UploadViewModel
     private lateinit var token: String
     private var getFile: File? = null
+
+    private var inputImgBitmap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityUploadBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setuppermission()
+        if (Build.VERSION.SDK_INT > 9) {
+            val policy = ThreadPolicy.Builder().permitAll().build()
+            StrictMode.setThreadPolicy(policy)
+        }
+
 
         val factory: UserViewModelFactory = UserViewModelFactory.getInstance(this)
         uploadViewModel = ViewModelProvider(this, factory)[UploadViewModel::class.java]
 
         val data = intent.getStringExtra(EXTRA_FRUIT)
         val ripe = "Ripe"
+
+        createRESTRequest()
 
         binding.tvFruitName.text = "Fruit : $data"
         binding.tvPrediction.text = "ripeness : $ripe "
@@ -57,6 +87,49 @@ class UploadActivity : AppCompatActivity() {
         binding.buttonUpload.setOnClickListener { uploadPhoto() }
 
 
+    }
+    private fun createRESTRequest(): Request? {
+        //Create the REST request.
+        //Create the REST request.
+        val INPUT_IMG_WIDTH = 128
+        val INPUT_IMG_HEIGHT = 128
+        val inputImg = IntArray(INPUT_IMG_HEIGHT * INPUT_IMG_WIDTH)
+        val inputImgRGB =
+            Array(1) {
+                Array(INPUT_IMG_HEIGHT) {
+                    Array(INPUT_IMG_WIDTH) {
+                        IntArray(3)
+                    }
+                }
+            }
+        inputImgBitmap?.getPixels(
+            inputImg,
+            0,
+            INPUT_IMG_WIDTH,
+            0,
+            0,
+            INPUT_IMG_WIDTH,
+            INPUT_IMG_HEIGHT
+        )
+        var pixel: Int
+        for (i in 0 until INPUT_IMG_HEIGHT) {
+            for (j in 0 until INPUT_IMG_WIDTH) {
+                // Extract RBG values from each pixel; alpha is ignored
+                pixel = inputImg[i * INPUT_IMG_WIDTH + j]
+                inputImgRGB[0][i][j][0] = pixel shr 16 and 0xff
+                inputImgRGB[0][i][j][1] = pixel shr 8 and 0xff
+                inputImgRGB[0][i][j][2] = pixel and 0xff
+            }
+        }
+
+        val requestBody: RequestBody = RequestBody.Companion.create(
+            "{\"signature_name\": \"serving_default\",\"instances\": " + inputImgRGB.contentDeepToString() + "}", JSON
+        )
+
+        return Request.Builder()
+            .url("http://34.70.38.194:8501/v1/Models/Banana:predict")
+            .post(requestBody)
+            .build()
     }
 
     override fun onRequestPermissionsResult(
@@ -78,43 +151,82 @@ class UploadActivity : AppCompatActivity() {
     }
 
     private fun uploadPhoto() {
-        if (getFile != null) {
-                binding.progressBar.visibility = View.VISIBLE
-                val file = UtilsCamera.reduceFileImage(getFile as File)
-                val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val imageMultipart: MultipartBody.Part = MultipartBody.Part.createFormData(
-                    "photo",
-                    file.name,
-                    requestImageFile
-                )
-                uploadViewModel.uploadStory(token, imageMultipart)
-                    .observe(this) { result ->
-                        if (result != null) {
-                            when (result) {
-                                is Result.Loading -> {
-                                    binding.progressBar.visibility = View.VISIBLE
-                                }
-                                is Result.Success<*> -> {
-                                    binding.progressBar.visibility = View.GONE
-//                                    Toast.makeText(this, result.data.message, Toast.LENGTH_SHORT)
-//                                        .show()
-                                    finish()
-                                }
-                                is Result.Error -> {
-                                    binding.progressBar.visibility = View.GONE
-                                    Toast.makeText(
-                                        this,
-                                        "Failure : " + result.error,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                        }
-                    }
-        } else {
-            Toast.makeText(this, resources.getString(R.string.input_image), Toast.LENGTH_SHORT)
-                .show()
+        if(inputImgBitmap!=null){
+            Log.d(TAG, "Uploading photo $inputImgBitmap")
+            binding.imageView.setImageBitmap(inputImgBitmap)
+            val request = createRESTRequest()
+            try {
+                client = OkHttpClient.Builder()
+                    .connectTimeout(5000, TimeUnit.SECONDS)
+                    .writeTimeout(5000, TimeUnit.SECONDS)
+                    .readTimeout(5000, TimeUnit.SECONDS)
+                    .callTimeout(5000, TimeUnit.SECONDS)
+                    .build()
+                val response: Response = client!!.newCall(request!!).execute()
+                val responseObject = JSONObject(response.body?.string())
+                postprocessRESTResponse(responseObject)
+            } catch (e: IOException) {
+                Log.e(TAG, e.message!!)
+                return
+            } catch (e: JSONException) {
+                Log.e(TAG, e.message!!)
+                return
+            }
+
         }
+    }
+
+    private fun postprocessRESTResponse(responseObject: JSONObject) {
+        // Process the REST response.
+        // Process the REST response.
+        val predictionsArray = responseObject.getJSONArray("predictions")
+        //You only send one image, so you directly extract the first element.
+        //You only send one image, so you directly extract the first element.
+        val predictions = predictionsArray.getJSONObject(0)
+        // Argmax
+        // Argmax
+        var maxIndex = 0
+        val detectionScores = predictions.getJSONArray("detection_scores")
+        for (j in 0 until predictions.getInt("num_detections")) {
+            maxIndex =
+                if (detectionScores.getDouble(j) > detectionScores.getDouble(maxIndex + 1)) j else maxIndex
+        }
+        val detectionClass = predictions.getJSONArray("detection_classes").getInt(maxIndex)
+        val boundingBox = predictions.getJSONArray("detection_boxes").getJSONArray(maxIndex)
+        val ymin = boundingBox.getDouble(0)
+        val xmin = boundingBox.getDouble(1)
+        val ymax = boundingBox.getDouble(2)
+        val xmax = boundingBox.getDouble(3)
+        displayResult(
+            detectionClass,
+            ymin.toFloat(),
+            xmin.toFloat(),
+            ymax.toFloat(),
+            xmax.toFloat()
+        )
+
+    }
+    private fun displayResult(
+        detectionClass: Int,
+        ymin: Float,
+        xmin: Float,
+        ymax: Float,
+        xmax: Float
+    ) {
+        val left = xmin * INPUT_IMG_WIDTH
+        val right = xmax * INPUT_IMG_WIDTH
+        val top = ymin * INPUT_IMG_HEIGHT
+        val bottom = ymax * INPUT_IMG_HEIGHT
+        // Draw bounding box
+        val resultInputBitmap = inputImgBitmap!!.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(resultInputBitmap)
+        val paint = Paint()
+        paint.setStyle(Paint.Style.STROKE)
+        paint.setStrokeWidth(5F)
+        paint.setColor(GREEN)
+        canvas.drawRect(left, top, right, bottom, paint)
+        binding.imageView.setImageBitmap(resultInputBitmap)
+        binding.tvPrediction.setText("Predicted class: $detectionClass")
     }
 
     private fun useGallery() {
@@ -130,9 +242,11 @@ class UploadActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             val selectedImg: Uri = result.data?.data as Uri
+            val result = MediaStore.Images.Media.getBitmap(this.contentResolver, selectedImg)
             val myFile = UtilsCamera.uriToFile(selectedImg, this@UploadActivity)
+            inputImgBitmap = result
             getFile = myFile
-            binding.imageView.setImageURI(selectedImg)
+            binding.imageView.setImageBitmap(result)
         }
     }
 
@@ -154,6 +268,7 @@ class UploadActivity : AppCompatActivity() {
             )
             val toFile = UtilsCamera.bitmapToFile(this@UploadActivity, result)
             getFile = toFile
+            inputImgBitmap = result
             binding.imageView.setImageBitmap(result)
         }
     }
@@ -210,3 +325,5 @@ class UploadActivity : AppCompatActivity() {
     }
 
 }
+
+private fun RequestBody.Companion.create(s: String, json: MediaType) = s.toRequestBody(json)

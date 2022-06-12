@@ -110,18 +110,6 @@ class MainActivity : AppCompatActivity() {
             this,
             factory
         )[MainViewModel::class.java]
-//        mainViewModel.isLogin().observe(this) {
-//            if (!it) {
-//                startActivity(Intent(this, MainActivity::class.java))
-//                finish()
-//            }
-//        }
-//        mainViewModel.getToken().observe(this) { token ->
-//            if (token.isNotEmpty()) {
-//                startActivity(Intent(this, MainActivity::class.java))
-//                finish()
-//                }
-//            }
 
     }
     companion object{

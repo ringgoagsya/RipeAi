@@ -1,17 +1,19 @@
 package com.dicoding.ripeai.ui.profile
 
-import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
-import android.view.View
+import android.view.MenuItem
 import android.widget.TextView
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.bumptech.glide.Glide
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.dicoding.ripeai.R
 import com.dicoding.ripeai.databinding.ActivityProfileBinding
 import com.dicoding.ripeai.datastore.api.ApiConfig
@@ -19,28 +21,63 @@ import com.dicoding.ripeai.datastore.response.*
 import com.dicoding.ripeai.ui.UserViewModelFactory
 import com.dicoding.ripeai.ui.about.AboutActivity
 import com.dicoding.ripeai.ui.history.HistoryActivity
-import com.dicoding.ripeai.ui.history.HistoryViewModel
 import com.dicoding.ripeai.ui.main.MainActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+
 
 class ProfileActivity : AppCompatActivity() {
     private lateinit var tvText: TextView
     private lateinit var navigation: BottomNavigationView
     private lateinit var binding: ActivityProfileBinding
     private lateinit var profileViewModel: ProfileViewModel
+    private var mQueue: RequestQueue? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        mQueue = Volley.newRequestQueue(this);
         init()
         navigationListener()
 
-        findUser()
 
+        findUser()
+        profilParse()
+
+    }
+
+    private fun profilParse() {
+        profileViewModel.getToken().observe(this){
+            if(it.isNotEmpty()){
+                Log.d(TAG, "Token is $it")
+                val url = "https://ripe-ai.et.r.appspot.com/api/user?email=$it"
+                val request = JsonObjectRequest(
+                    Request.Method.GET, url, null,
+                    { response ->
+                        try {
+                            val jsonArray = response.getJSONArray("data")
+                            for (i in 0 until jsonArray.length()) {
+                                val employee = jsonArray.getJSONObject(i)
+                                val firstName = employee.getString("firstname")
+                                val lastname = employee.getString("lastname")
+                                val phone = employee.getString("phone")
+                                val mail = employee.getString("email")
+                                binding.name.text = "Name : $firstName $lastname"
+                                binding.phone.text = "Phone : $phone"
+                                binding.email.text = "Email : $mail"
+                            }
+                        } catch (e: JSONException) {
+                            e.printStackTrace()
+                        }
+                    }) { error -> error.printStackTrace() }
+                mQueue?.add(request)
+            }
+        }
     }
 
     private fun findUser() {
@@ -50,49 +87,8 @@ class ProfileActivity : AppCompatActivity() {
             factory
         )[ProfileViewModel::class.java]
 
-        profileViewModel.getToken().observe(this){ token ->
-            val client = ApiConfig.getApiService().getUser(token)
-            client.enqueue(object : Callback<UserResponse> {
-                override fun onResponse(
-                    call: Call<UserResponse>,
-                    response: Response<UserResponse>
-                ) {
-                    if (response.isSuccessful) {
-                        val responseBody = response.body()
-                        if (responseBody != null) {
-                            val data = responseBody.data
-                            setData(data as ArrayList<DataUser>)
-                        }
-                    } else {
-                        Log.e(this@ProfileActivity.toString(), "response succesfull is:  ${response.isSuccessful}")
-                    }
-                }
-
-                override fun onFailure(call: Call<UserResponse>, t: Throwable) {
-                    Log.e(this@ProfileActivity.toString(), "onFailure dimana:  ${call.isExecuted}")
-                }
-
-            })
-        }
     }
 
-    private fun setData(data: ArrayList<DataUser>) {
-        for (bind in data) {
-            binding.apply {
-                binding.phone.text = bind.phone
-                binding.email.text = bind.email
-                binding.name.text = bind.firstname+bind.lastname
-            }
-        }
-    }
-
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.top_menu, menu)
-
-        return true
-    }
     private fun init() {
         tvText = findViewById(R.id.textView)
         navigation = findViewById(R.id.navigation)
@@ -135,6 +131,27 @@ class ProfileActivity : AppCompatActivity() {
             false
         }
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.top_menu, menu)
+
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.logout -> {
+                profileViewModel.logout()
+                true
+            }
+            R.id.settings -> {
+                startActivity(Intent(Settings.ACTION_LOCALE_SETTINGS))
+                true
+            }
+            else -> true
+        }
+    }
+
     companion object {
         const val EXTRA_DATA = "extra_data"
         const val EXTRA_TITLE = "extra_title"

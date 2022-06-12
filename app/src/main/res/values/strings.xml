@@ -42,4 +42,7 @@
     <string name="description">description</string>
     <string name="banana">Banana</string>
     <string name="banana_description">A banana is an elongated, edible fruit</string>
+    <string name="name_profile">"Name : "</string>
+    <string name="phone_profile">"Phone : "</string>
+    <string name="email_profile">Email :</string>
 </resources>

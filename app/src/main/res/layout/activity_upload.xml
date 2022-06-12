@@ -46,7 +46,7 @@
         android:id="@+id/tv_fruitName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="@string/hint_desc"
+        android:hint="@string/fruit_name"
         android:importantForAutofill="no"
         android:minHeight="48dp"
         android:textSize="18sp"
